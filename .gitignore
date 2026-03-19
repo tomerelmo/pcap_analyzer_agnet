@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.DS_Store
+shared/reports/*
+shared/cache/*
+!shared/reports/.gitkeep
+!shared/cache/.gitkeep

@@ -1,0 +1,62 @@
+version: "3.9"
+
+networks:
+  pcap-net:
+    driver: bridge
+
+services:
+  frontend:
+    build: apps/frontend
+    ports:
+      - "${FRONTEND_PORT:-8501}:8501"
+    depends_on:
+      - backend
+    env_file:
+      - .env
+    environment:
+      - BACKEND_URL=http://backend:8000
+      - DEFAULT_OLLAMA_BASE_URL=${DEFAULT_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - DEFAULT_OLLAMA_MODEL=${DEFAULT_OLLAMA_MODEL:-gpt-oss:20b}
+    networks:
+      - pcap-net
+    restart: unless-stopped
+
+  backend:
+    build: apps/backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      - mcp-server
+    env_file:
+      - .env
+    environment:
+      - MCP_SERVER_URL=http://mcp-server:8001
+      - REPORTS_DIR=/data/reports
+      - CACHE_DIR=/data/cache
+      - ALLOWED_PCAP_ROOTS=/data/pcaps
+    volumes:
+      - ./shared/reports:/data/reports
+      - ./shared/cache:/data/cache
+      - type: bind
+        source: ${PCAP_HOST_DIR:-./sample_pcaps}
+        target: /data/pcaps
+    networks:
+      - pcap-net
+    restart: unless-stopped
+
+  mcp-server:
+    build: mcp/server
+    env_file:
+      - .env
+    environment:
+      - ALLOWED_PCAP_ROOTS=/data/pcaps
+      - CACHE_DIR=/data/cache
+      - MAX_PACKET_SLICE_RESULTS=${MAX_PACKET_SLICE_RESULTS:-200}
+    volumes:
+      - type: bind
+        source: ${PCAP_HOST_DIR:-./sample_pcaps}
+        target: /data/pcaps
+      - ./shared/cache:/data/cache
+    networks:
+      - pcap-net
+    restart: unless-stopped
