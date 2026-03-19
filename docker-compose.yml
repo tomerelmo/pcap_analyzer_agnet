@@ -17,6 +17,8 @@ services:
       - BACKEND_URL=http://backend:8000
       - DEFAULT_OLLAMA_BASE_URL=${DEFAULT_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       - DEFAULT_OLLAMA_MODEL=${DEFAULT_OLLAMA_MODEL:-gpt-oss:20b}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - pcap-net
     restart: unless-stopped
@@ -34,6 +36,8 @@ services:
       - REPORTS_DIR=/data/reports
       - CACHE_DIR=/data/cache
       - ALLOWED_PCAP_ROOTS=/data/pcaps
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./shared/reports:/data/reports
       - ./shared/cache:/data/cache
